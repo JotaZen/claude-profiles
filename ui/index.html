@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Claude Profiles</title>
+<style>
+  :root {
+    --bg: #171614; --surface: #211f1d; --surface-2: #2a2724; --border: #35312e;
+    --text: #efece6; --muted: #a09a92; --faint: #6f6962;
+    --accent: #d97757; --ok: #6fbf8b; --warn: #e0b341; --danger: #e0695f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text); user-select: none;
+    font: 14px/1.5 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; }
+  .sel { user-select: text; }
+
+  header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 24px; border-bottom: 1px solid var(--border);
+  }
+  .logo { width: 28px; height: 28px; border-radius: 8px; background: var(--accent);
+          display: grid; place-items: center; color: #1b1512; font-weight: 700; }
+  h1 { font-size: 15px; margin: 0; font-weight: 600; }
+  .spacer { flex: 1; }
+
+  main { padding: 22px 24px 40px; max-width: 760px; margin: 0 auto; }
+
+  /* ---- banner */
+  .hint {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: rgba(224,179,65,.08); border: 1px solid rgba(224,179,65,.28);
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 20px;
+    color: #e8dcc2; font-size: 13px;
+  }
+  .hint .i { color: var(--warn); font-weight: 700; }
+
+  /* ---- onboarding */
+  .onboard { text-align: center; padding: 48px 20px; }
+  .onboard h2 { font-size: 20px; margin: 0 0 8px; font-weight: 600; }
+  .onboard p { color: var(--muted); max-width: 440px; margin: 0 auto 22px; }
+
+  /* ---- perfiles */
+  .row {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+    position: relative;
+  }
+  .row.on { border-color: var(--accent); background: #241f1c; }
+  .swatch { width: 10px; height: 34px; border-radius: 4px; flex: none; }
+  .who { flex: 1; min-width: 0; }
+  .who .name { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .who .desc { color: var(--muted); font-size: 12.5px; margin-top: 2px;
+               white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pill { font-size: 10.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+          padding: 2px 7px; border-radius: 5px; background: rgba(217,119,87,.16);
+          color: var(--accent); border: 1px solid rgba(217,119,87,.35); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; background: var(--faint); }
+  .dot.ok { background: var(--ok); }
+
+  button {
+    font: inherit; font-size: 13px; padding: 7px 13px; border-radius: 8px; cursor: pointer;
+    background: var(--surface-2); color: var(--text); border: 1px solid var(--border);
+    transition: background .12s, border-color .12s, opacity .12s; white-space: nowrap;
+  }
+  button:hover:not(:disabled) { background: #36312b; border-color: #4a443e; }
+  button:disabled { opacity: .4; cursor: default; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #1b1512; font-weight: 600; }
+  button.primary:hover:not(:disabled) { background: #e68a6d; border-color: #e68a6d; }
+  button.ghost { background: transparent; border-color: transparent; color: var(--muted); }
+  button.ghost:hover:not(:disabled) { background: var(--surface-2); color: var(--text); }
+  button.big { padding: 10px 20px; font-size: 14px; }
+  button.icon { padding: 7px 10px; }
+
+  /* ---- menu */
+  .menu {
+    position: absolute; right: 14px; top: 54px; z-index: 20; min-width: 230px;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 5px; box-shadow: 0 10px 34px rgba(0,0,0,.5);
+  }
+  .menu button { display: block; width: 100%; text-align: left; background: none;
+                 border: none; border-radius: 6px; padding: 7px 10px; }
+  .menu button:hover { background: #413a33; }
+  .menu hr { border: none; border-top: 1px solid var(--border); margin: 5px 2px; }
+  .menu .dang { color: var(--danger); }
+
+  /* ---- avanzado */
+  details { margin-top: 26px; border-top: 1px solid var(--border); padding-top: 16px; }
+  summary { cursor: pointer; color: var(--muted); font-size: 13px; list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "▸ "; color: var(--faint); }
+  details[open] summary::before { content: "▾ "; }
+  .kv { display: grid; grid-template-columns: 210px 1fr auto; gap: 8px 14px;
+        align-items: center; margin-top: 14px; font-size: 12.5px; }
+  .kv .k { color: var(--faint); }
+  .kv .v { color: var(--muted); word-break: break-all; }
+  .note { color: var(--faint); font-size: 12px; margin-top: 14px; }
+
+  dialog { border: 1px solid var(--border); border-radius: 12px; background: var(--surface);
+           color: var(--text); padding: 0; width: 400px; max-width: 92vw; }
+  dialog::backdrop { background: rgba(0,0,0,.6); }
+  .dlg-body { padding: 18px; display: grid; gap: 14px; }
+  .dlg-foot { padding: 0 18px 16px; display: flex; justify-content: flex-end; gap: 8px; }
+  label { display: grid; gap: 6px; font-size: 12px; color: var(--muted); }
+  input[type=text] { font: inherit; padding: 9px 11px; border-radius: 8px; user-select: text;
+                     background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+  input[type=text]:focus { outline: none; border-color: var(--accent); }
+  .colors { display: flex; gap: 8px; }
+  .colors span { width: 26px; height: 26px; border-radius: 7px; cursor: pointer; border: 2px solid transparent; }
+  .colors span.sel { border-color: var(--text); }
+
+  #toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(10px);
+           background: var(--surface-2); border: 1px solid var(--border); padding: 11px 16px;
+           border-radius: 9px; max-width: 76vw; opacity: 0; pointer-events: none; z-index: 60;
+           transition: opacity .2s, transform .2s; font-size: 13px; box-shadow: 0 8px 28px rgba(0,0,0,.5); }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.err { border-color: var(--danger); }
+  #toast.ok { border-color: var(--ok); }
+
+  .busy { position: fixed; inset: 0; background: rgba(23,22,20,.75); display: none;
+          place-items: center; z-index: 70; text-align: center; }
+  .busy.show { display: grid; }
+  .spin { width: 26px; height: 26px; margin: 0 auto 12px; border: 3px solid var(--border);
+          border-top-color: var(--accent); border-radius: 50%; animation: sp .8s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">C</div>
+  <h1>Claude Profiles</h1>
+  <div class="spacer"></div>
+  <button id="btn-new" class="ghost">+ Perfil</button>
+</header>
+
+<main>
+  <div id="hint"></div>
+  <div id="body"></div>
+
+  <details id="adv">
+    <summary>Avanzado</summary>
+    <div class="kv" id="kv"></div>
+    <p class="note" id="note"></p>
+  </details>
+</main>
+
+<dialog id="dlg">
+  <form method="dialog">
+    <div class="dlg-body">
+      <label>Nombre del perfil
+        <input type="text" id="f-label" placeholder="Personal, Trabajo..." autocomplete="off">
+      </label>
+      <label>Color
+        <div class="colors" id="f-colors"></div>
+      </label>
+      <label>Carpeta donde abrir la terminal (opcional)
+        <input type="text" id="f-workdir" placeholder="Tu carpeta de usuario">
+      </label>
+    </div>
+    <div class="dlg-foot">
+      <button value="cancel" class="ghost">Cancelar</button>
+      <button value="ok" class="primary" id="dlg-ok">Crear</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="busy" id="busy"><div><div class="spin"></div><div id="busy-text"></div></div></div>
+<div id="toast"></div>
+
+<script>
+const { invoke } = window.__TAURI__.core;
+const PALETTE = ["#d97757", "#6fa8dc", "#8fbf6f", "#c08fd0", "#e0b341", "#78c7c0"];
+
+let S = null, editing = null, formColor = PALETTE[0], openMenu = null;
+
+const $ = (s) => document.querySelector(s);
+const el = (t, c, x) => { const n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; };
+const btn = (txt, cls, fn) => { const b = el("button", cls, txt); b.onclick = fn; return b; };
+
+function toast(msg, kind) {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.className = "show " + (kind || "");
+  clearTimeout(t._t);
+  t._t = setTimeout(() => (t.className = ""), 5000);
+}
+const busy = (on, text) => { $("#busy-text").textContent = text || ""; $("#busy").classList.toggle("show", !!on); };
+
+async function act(cmd, args, okMsg, busyText) {
+  closeMenu();
+  try {
+    if (busyText) busy(true, busyText);
+    const r = await invoke(cmd, args || {});
+    if (okMsg !== null) toast(okMsg || (typeof r === "string" && r ? r : "Listo"), "ok");
+    await refresh();
+    return r;
+  } catch (err) {
+    toast(String(err), "err");
+    return null;
+  } finally { busy(false); }
+}
+
+// ------------------------------------------------------------------ perfiles
+
+function describe(p) {
+  const bits = [];
+  if (p.codeAccount && p.codeAccount.email) bits.push(p.codeAccount.email);
+  else if (p.codeLoggedIn) bits.push("CLI con sesion");
+  if (p.codeAccount && p.codeAccount.org) bits.push(p.codeAccount.org);
+  else if (p.codeAccount && p.codeAccount.plan) bits.push("plan " + p.codeAccount.plan);
+  bits.push(p.desktopLoggedIn ? "escritorio con sesion" : "escritorio sin sesion");
+  return bits.join("  ·  ");
+}
+
+function profileRow(p) {
+  const active = p.isDefaultCode || p.isActiveDesktop;
+  const row = el("div", "row" + (active ? " on" : ""));
+
+  const sw = el("div", "swatch"); sw.style.background = p.color;
+  row.appendChild(sw);
+
+  const who = el("div", "who");
+  const name = el("div", "name");
+  name.appendChild(el("span", null, p.label));
+  if (active) name.appendChild(el("span", "pill", "en uso"));
+  who.appendChild(name);
+  who.appendChild(el("div", "desc", describe(p)));
+  row.appendChild(who);
+
+  if (!active) row.appendChild(btn("Usar", "primary", () => usar(p)));
+  row.appendChild(btn("Terminal", "", () => act("launch_code", { id: p.id }, "Terminal abierta.")));
+  row.appendChild(btn("⋯", "ghost icon", (ev) => { ev.stopPropagation(); showMenu(row, p); }));
+
+  return row;
+}
+
+async function usar(p) {
+  closeMenu();
+  try {
+    const r = await invoke("use_profile", { id: p.id, closeRunning: false });
+    toast(r, "ok");
+    await refresh();
+  } catch (err) {
+    if (String(err).includes("__NEEDS_CLOSE__")) {
+      if (!confirm("Claude Desktop esta abierto y hay que cerrarlo para cambiar de cuenta.\n\nCerrarlo ahora?")) return;
+      await act("use_profile", { id: p.id, closeRunning: true }, undefined, "Cambiando de perfil...");
+    } else {
+      toast(String(err), "err");
+    }
+  }
+}
+
+function closeMenu() { if (openMenu) { openMenu.remove(); openMenu = null; } }
+
+function showMenu(row, p) {
+  closeMenu();
+  const m = el("div", "menu");
+  const add = (t, fn, cls) => m.appendChild(btn(t, cls, fn));
+
+  add("Abrir otra ventana de Claude con este perfil", () => paralelo(p));
+  add("Copiar mi configuracion (skills, CLAUDE.md...)", async () => {
+    const r = await act("copy_shared_config", { id: p.id, from: null }, null, "Copiando...");
+    if (r) toast(r.length ? "Copiado: " + r.join(", ") : "No habia nada que copiar.", "ok");
+  });
+  if (!p.codeLoggedIn && S.homeClaudeExists)
+    add("Adoptar la sesion de la CLI actual", () => act("import_code_session", { id: p.id }, undefined, "Copiando..."));
+  if (!S.desktopManaged)
+    add("Adoptar la sesion del escritorio actual", () => act("claim_desktop", { id: p.id }, undefined, "Moviendo..."));
+  add("Crear acceso directo en el Escritorio", () => act("create_shortcut", { id: p.id }, undefined));
+  m.appendChild(el("hr"));
+  add("Abrir carpeta del perfil", () => act("open_path", { path: p.codeDir.replace(/\\code$/, "") }, null));
+  add("Editar nombre y color", () => openEdit(p));
+  add("Eliminar perfil", () => borrar(p), "dang");
+
+  row.appendChild(m);
+  openMenu = m;
+}
+
+async function paralelo(p) {
+  closeMenu();
+  busy(true, "Abriendo otra ventana de Claude...");
+  try {
+    await invoke("launch_instance", { id: p.id, portable: false });
+    toast("Ventana abierta con el perfil " + p.label, "ok");
+  } catch (err) {
+    if (S.portableReady) {
+      try {
+        await invoke("launch_instance", { id: p.id, portable: true });
+        toast("Ventana abierta desde la copia portable.", "ok");
+      } catch (e2) { toast(String(e2), "err"); }
+    } else {
+      busy(false);
+      if (confirm("Windows no deja lanzar una segunda ventana desde la app instalada.\n\nCrear una copia portable (unos 660 MB, tarda un par de minutos)?"))
+        await act("prepare_portable", {}, undefined, "Copiando la aplicacion...");
+      return;
+    }
+  } finally { busy(false); setTimeout(refresh, 1500); }
+}
+
+async function borrar(p) {
+  closeMenu();
+  const hard = confirm("Eliminar el perfil \"" + p.label + "\".\n\nAceptar: borra tambien sus sesiones del disco.\nCancelar: solo lo quita de la lista.");
+  await act("delete_profile", { id: p.id, deleteFiles: hard }, "Perfil eliminado.");
+}
+
+// ------------------------------------------------------------------- render
+
+function render() {
+  const h = $("#hint");
+  h.innerHTML = "";
+  if (S.hint && !S.needsSetup) {
+    const d = el("div", "hint");
+    d.appendChild(el("span", "i", "!"));
+    d.appendChild(el("span", null, S.hint));
+    h.appendChild(d);
+  }
+
+  const body = $("#body");
+  body.innerHTML = "";
+
+  if (S.needsSetup) {
+    const o = el("div", "onboard");
+    o.appendChild(el("h2", null, "Dos cuentas, un equipo"));
+    o.appendChild(el("p", null, S.hint || ""));
+    o.appendChild(btn("Configurar automaticamente", "primary big",
+      () => act("auto_setup", {}, undefined, "Preparando los perfiles...")));
+    const alt = el("p");
+    alt.style.marginTop = "18px";
+    alt.appendChild(btn("Prefiero hacerlo a mano", "ghost", openNew));
+    o.appendChild(alt);
+    body.appendChild(o);
+  } else {
+    S.profiles.forEach(p => body.appendChild(profileRow(p)));
+  }
+
+  renderAdv();
+}
+
+function renderAdv() {
+  const kv = $("#kv");
+  kv.innerHTML = "";
+  const row = (k, v, action) => {
+    kv.appendChild(el("div", "k", k));
+    kv.appendChild(el("div", "v mono sel", v));
+    kv.appendChild(action || el("div"));
+  };
+  row("Claude Desktop", S.desktopRunning ? "abierto" : "cerrado",
+    S.desktopRunning ? btn("Cerrar", "", () => act("close_desktop", {}, "Cerrado.")) : null);
+  row("Carpeta del escritorio", S.desktopUserData + (S.desktopManaged ? "  (enlazada)" : "  (sin gestionar)"),
+    S.desktopManaged ? btn("Dejar de gestionar", "", () => act("unmanage_desktop", {}, undefined, "Restaurando...")) : null);
+  row("CLAUDE_CONFIG_DIR", S.defaultCodeEnv || "sin definir (se usa ~/.claude)",
+    S.defaultCodeEnv ? btn("Quitar", "", () => act("set_default_code", { id: null }, "Variable eliminada.")) : null);
+  row("Carpeta de perfiles", S.profilesRoot, btn("Abrir", "", () => act("open_path", { path: S.profilesRoot }, null)));
+  row("Copia portable", S.portableDir + (S.portableReady ? "  (lista)" : "  (no creada)"),
+    btn(S.portableReady ? "Actualizar" : "Crear", "", () => act("prepare_portable", {}, undefined, "Copiando la aplicacion...")));
+  row("App instalada", S.packageVersion ? ("v" + S.packageVersion) : "no encontrada", null);
+
+  $("#note").textContent =
+    "Claude Code corre varias cuentas a la vez: cada terminal lleva su propia CLAUDE_CONFIG_DIR. " +
+    "Claude Desktop guarda todo en una sola carpeta, asi que cambiar de cuenta reapunta un enlace y " +
+    "necesita la app cerrada; la copia portable solo hace falta para tener dos ventanas abiertas a la vez.";
+}
+
+// -------------------------------------------------------------------- dialogo
+
+function paintColors() {
+  const c = $("#f-colors");
+  c.innerHTML = "";
+  PALETTE.forEach(col => {
+    const s = el("span", col === formColor ? "sel" : "");
+    s.style.background = col;
+    s.onclick = () => { formColor = col; paintColors(); };
+    c.appendChild(s);
+  });
+}
+function openNew() {
+  closeMenu();
+  editing = null;
+  formColor = PALETTE[(S ? S.profiles.length : 0) % PALETTE.length];
+  $("#dlg-ok").textContent = "Crear";
+  $("#f-label").value = ""; $("#f-workdir").value = "";
+  paintColors(); $("#dlg").showModal();
+  setTimeout(() => $("#f-label").focus(), 50);
+}
+function openEdit(p) {
+  closeMenu();
+  editing = p; formColor = p.color;
+  $("#dlg-ok").textContent = "Guardar";
+  $("#f-label").value = p.label; $("#f-workdir").value = p.workdir;
+  paintColors(); $("#dlg").showModal();
+}
+$("#dlg").addEventListener("close", async () => {
+  if ($("#dlg").returnValue !== "ok") return;
+  const label = $("#f-label").value.trim();
+  const workdir = $("#f-workdir").value.trim();
+  if (!label) { toast("Falta el nombre.", "err"); return; }
+  if (editing) { await act("update_profile", { id: editing.id, label, color: formColor, workdir }, "Perfil actualizado."); return; }
+  const id = await act("add_profile", { label, color: formColor }, "Perfil creado.");
+  if (id && workdir) await act("update_profile", { id, label, color: formColor, workdir }, null);
+});
+
+$("#btn-new").onclick = openNew;
+document.addEventListener("click", closeMenu);
+
+async function refresh() {
+  try {
+    const open = $("#adv").open;
+    S = await invoke("get_state");
+    render();
+    $("#adv").open = open;
+  } catch (err) { toast("No se pudo leer el estado: " + err, "err"); }
+}
+
+refresh();
+setInterval(() => {
+  if (!$("#dlg").open && !$("#busy").classList.contains("show") && !openMenu) refresh();
+}, 6000);
+</script>
+</body>
+</html>
