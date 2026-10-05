@@ -22,8 +22,8 @@
     display: flex; align-items: center; gap: 12px;
     padding: 16px 24px; border-bottom: 1px solid var(--border);
   }
-  .logo { width: 28px; height: 28px; border-radius: 8px; background: var(--accent);
-          display: grid; place-items: center; color: #1b1512; font-weight: 700; }
+  /* El logo es pixel art: sin suavizado, para que el filo se mantenga. */
+  .logo { width: 28px; height: 28px; display: block; image-rendering: pixelated; }
   h1 { font-size: 15px; margin: 0; font-weight: 600; }
   .spacer { flex: 1; }
 
@@ -132,7 +132,7 @@
 <body>
 
 <header>
-  <div class="logo">C</div>
+  <img class="logo" src="logo.svg" alt="" width="28" height="28" />
   <h1>Claude Profiles</h1>
   <div class="spacer"></div>
   <button id="btn-new" class="ghost">+ Perfil</button>
